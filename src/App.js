@@ -81,10 +81,13 @@ function base64ToArrayBuffer(base64) {
 
 function pcm16ToFloat32(arrayBuffer) {
   const view = new DataView(arrayBuffer);
-  const samples = new Float32Array(arrayBuffer.byteLength / 2);
+  const samples = new Float32Array(
+    arrayBuffer.byteLength / 2
+  );
 
   for (let i = 0; i < samples.length; i++) {
-    samples[i] = view.getInt16(i * 2, true) / 32768;
+    samples[i] =
+      view.getInt16(i * 2, true) / 32768;
   }
 
   return samples;
@@ -124,9 +127,7 @@ function App() {
     audioSourcesRef.current.forEach((source) => {
       try {
         source.stop();
-      } catch {
-        //
-      }
+      } catch {}
     });
 
     audioSourcesRef.current = [];
@@ -138,41 +139,60 @@ function App() {
 
     try {
       if (!outputAudioContextRef.current) {
-        outputAudioContextRef.current = new AudioContext({
-          sampleRate: 24000,
-        });
+        outputAudioContextRef.current =
+          new AudioContext({
+            sampleRate: 24000,
+          });
       }
 
-      const audioContext = outputAudioContextRef.current;
+      const audioContext =
+        outputAudioContextRef.current;
 
       if (audioContext.state === "suspended") {
         await audioContext.resume();
       }
 
-      const arrayBuffer = base64ToArrayBuffer(base64Audio);
-      const float32Audio = pcm16ToFloat32(arrayBuffer);
+      const arrayBuffer =
+        base64ToArrayBuffer(base64Audio);
+
+      const float32Audio =
+        pcm16ToFloat32(arrayBuffer);
 
       if (!float32Audio.length) return;
 
-      const audioBuffer = audioContext.createBuffer(
-        1,
-        float32Audio.length,
-        24000
+      const audioBuffer =
+        audioContext.createBuffer(
+          1,
+          float32Audio.length,
+          24000
+        );
+
+      audioBuffer.copyToChannel(
+        float32Audio,
+        0
       );
 
-      audioBuffer.copyToChannel(float32Audio, 0);
+      const source =
+        audioContext.createBufferSource();
 
-      const source = audioContext.createBufferSource();
       source.buffer = audioBuffer;
-      source.connect(audioContext.destination);
+      source.connect(
+        audioContext.destination
+      );
 
-      const currentTime = audioContext.currentTime;
+      const currentTime =
+        audioContext.currentTime;
 
-      if (nextAudioTimeRef.current < currentTime) {
-        nextAudioTimeRef.current = currentTime;
+      if (
+        nextAudioTimeRef.current <
+        currentTime
+      ) {
+        nextAudioTimeRef.current =
+          currentTime;
       }
 
-      const startTime = nextAudioTimeRef.current;
+      const startTime =
+        nextAudioTimeRef.current;
 
       source.start(startTime);
 
@@ -195,12 +215,16 @@ function App() {
         }
       };
     } catch (audioError) {
-      console.error("Audio playback error:", audioError);
+      console.error(
+        "Audio playback error:",
+        audioError
+      );
     }
   };
 
   const handleGeminiMessage = (message) => {
-    const serverContent = message?.serverContent;
+    const serverContent =
+      message?.serverContent;
 
     if (!serverContent) return;
 
@@ -208,26 +232,36 @@ function App() {
       serverContent.inputTranscription;
 
     if (inputTranscription?.text) {
-      addMessage("user", inputTranscription.text);
+      addMessage(
+        "user",
+        inputTranscription.text
+      );
     }
 
     const outputTranscription =
       serverContent.outputTranscription;
 
     if (outputTranscription?.text) {
-      addMessage("ai", outputTranscription.text);
+      addMessage(
+        "ai",
+        outputTranscription.text
+      );
     }
 
-    const modelTurn = serverContent.modelTurn;
+    const modelTurn =
+      serverContent.modelTurn;
 
     if (modelTurn?.parts) {
       setStatus("speaking");
 
       modelTurn.parts.forEach((part) => {
-        const inlineData = part?.inlineData;
+        const inlineData =
+          part?.inlineData;
 
         if (inlineData?.data) {
-          playGeminiAudio(inlineData.data);
+          playGeminiAudio(
+            inlineData.data
+          );
         }
       });
     }
@@ -241,7 +275,9 @@ function App() {
     }
 
     if (serverContent.turnComplete) {
-      if (audioSourcesRef.current.length === 0) {
+      if (
+        audioSourcesRef.current.length === 0
+      ) {
         setStatus("listening");
       }
     }
@@ -249,7 +285,8 @@ function App() {
 
   const startMicrophone = async () => {
     const AudioContextClass =
-      window.AudioContext || window.webkitAudioContext;
+      window.AudioContext ||
+      window.webkitAudioContext;
 
     if (!AudioContextClass) {
       throw new Error(
@@ -270,25 +307,35 @@ function App() {
 
     streamRef.current = stream;
 
-    const audioContext = new AudioContextClass();
+    const audioContext =
+      new AudioContextClass();
 
-    audioContextRef.current = audioContext;
+    audioContextRef.current =
+      audioContext;
 
     if (audioContext.state === "suspended") {
       await audioContext.resume();
     }
 
     const source =
-      audioContext.createMediaStreamSource(stream);
+      audioContext.createMediaStreamSource(
+        stream
+      );
 
     sourceRef.current = source;
 
     const processor =
-      audioContext.createScriptProcessor(4096, 1, 1);
+      audioContext.createScriptProcessor(
+        4096,
+        1,
+        1
+      );
 
     processorRef.current = processor;
 
-    const silentGain = audioContext.createGain();
+    const silentGain =
+      audioContext.createGain();
+
     silentGain.gain.value = 0;
 
     processor.onaudioprocess = (event) => {
@@ -302,29 +349,39 @@ function App() {
       const inputData =
         event.inputBuffer.getChannelData(0);
 
-      const resampled = resampleTo16k(
-        inputData,
-        audioContext.sampleRate
-      );
+      const resampled =
+        resampleTo16k(
+          inputData,
+          audioContext.sampleRate
+        );
 
-      const pcm = floatTo16BitPCM(resampled);
-      const base64Audio = arrayBufferToBase64(pcm);
+      const pcm =
+        floatTo16BitPCM(resampled);
+
+      const base64Audio =
+        arrayBufferToBase64(pcm);
 
       try {
         sessionRef.current.sendRealtimeInput({
           audio: {
             data: base64Audio,
-            mimeType: "audio/pcm;rate=16000",
+            mimeType:
+              "audio/pcm;rate=16000",
           },
         });
       } catch (sendError) {
-        console.error("Audio send error:", sendError);
+        console.error(
+          "Audio send error:",
+          sendError
+        );
       }
     };
 
     source.connect(processor);
     processor.connect(silentGain);
-    silentGain.connect(audioContext.destination);
+    silentGain.connect(
+      audioContext.destination
+    );
   };
 
   const startLive = async () => {
@@ -332,31 +389,38 @@ function App() {
     setStatus("thinking");
 
     try {
-      const session = await connectLive({
-        onOpen: () => {
-          console.log("Live session opened.");
-        },
+      const session =
+        await connectLive({
+          onOpen: () => {
+            console.log(
+              "Live session opened."
+            );
+          },
 
-        onMessage: handleGeminiMessage,
+          onMessage:
+            handleGeminiMessage,
 
-        onError: (liveError) => {
-          console.error(
-            "Gemini Live error:",
-            liveError
-          );
+          onError: (liveError) => {
+            console.error(
+              "Gemini Live error:",
+              liveError
+            );
 
-          setError(
-            liveError?.message ||
-              "Gemini Live connection error হয়েছে।"
-          );
+            setError(
+              liveError?.message ||
+                "Gemini Live connection error হয়েছে।"
+            );
 
-          setStatus("error");
-        },
+            setStatus("error");
+          },
 
-        onClose: (event) => {
-          console.log("Gemini Live closed:", event);
-        },
-      });
+          onClose: (event) => {
+            console.log(
+              "Gemini Live closed:",
+              event
+            );
+          },
+        });
 
       sessionRef.current = session;
       isRunningRef.current = true;
@@ -366,7 +430,10 @@ function App() {
       setIsListening(true);
       setStatus("listening");
     } catch (startError) {
-      console.error("Start error:", startError);
+      console.error(
+        "Start error:",
+        startError
+      );
 
       await stopLive(false);
 
@@ -374,13 +441,20 @@ function App() {
         startError?.message ||
         "Voice AI চালু করা যায়নি।";
 
-      if (startError?.name === "NotAllowedError") {
+      if (
+        startError?.name ===
+        "NotAllowedError"
+      ) {
         message =
           "Microphone permission দেওয়া হয়নি। Browser settings থেকে Microphone Allow করুন।";
       }
 
-      if (startError?.name === "NotFoundError") {
-        message = "কোনো microphone পাওয়া যায়নি।";
+      if (
+        startError?.name ===
+        "NotFoundError"
+      ) {
+        message =
+          "কোনো microphone পাওয়া যায়নি।";
       }
 
       setError(message);
@@ -389,17 +463,18 @@ function App() {
     }
   };
 
-  const stopLive = async (updateState = true) => {
+  const stopLive = async (
+    updateState = true
+  ) => {
     isRunningRef.current = false;
 
     if (processorRef.current) {
-      processorRef.current.onaudioprocess = null;
+      processorRef.current.onaudioprocess =
+        null;
 
       try {
         processorRef.current.disconnect();
-      } catch {
-        //
-      }
+      } catch {}
 
       processorRef.current = null;
     }
@@ -407,17 +482,17 @@ function App() {
     if (sourceRef.current) {
       try {
         sourceRef.current.disconnect();
-      } catch {
-        //
-      }
+      } catch {}
 
       sourceRef.current = null;
     }
 
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => {
-        track.stop();
-      });
+      streamRef.current
+        .getTracks()
+        .forEach((track) => {
+          track.stop();
+        });
 
       streamRef.current = null;
     }
@@ -425,9 +500,7 @@ function App() {
     if (audioContextRef.current) {
       try {
         await audioContextRef.current.close();
-      } catch {
-        //
-      }
+      } catch {}
 
       audioContextRef.current = null;
     }
@@ -437,9 +510,7 @@ function App() {
     if (outputAudioContextRef.current) {
       try {
         await outputAudioContextRef.current.close();
-      } catch {
-        //
-      }
+      } catch {}
 
       outputAudioContextRef.current = null;
     }
@@ -485,31 +556,32 @@ function App() {
       isRunningRef.current = false;
 
       if (processorRef.current) {
-        processorRef.current.onaudioprocess = null;
+        processorRef.current.onaudioprocess =
+          null;
 
         try {
           processorRef.current.disconnect();
-        } catch {
-          //
-        }
+        } catch {}
       }
 
       if (sourceRef.current) {
         try {
           sourceRef.current.disconnect();
-        } catch {
-          //
-        }
+        } catch {}
       }
 
       if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => {
-          track.stop();
-        });
+        streamRef.current
+          .getTracks()
+          .forEach((track) => {
+            track.stop();
+          });
       }
 
       if (audioContextRef.current) {
-        audioContextRef.current.close().catch(() => {});
+        audioContextRef.current
+          .close()
+          .catch(() => {});
       }
 
       if (outputAudioContextRef.current) {
@@ -521,9 +593,7 @@ function App() {
       if (sessionRef.current) {
         try {
           sessionRef.current.close();
-        } catch {
-          //
-        }
+        } catch {}
       }
     };
   }, []);
@@ -552,14 +622,17 @@ function App() {
               {" "}
               Clear Chat
             </span>
-            <span className="sm:hidden"> Clear</span>
+            <span className="sm:hidden">
+              {" "}
+              Clear
+            </span>
           </button>
         </div>
       </header>
 
       <main className="h-[calc(100vh-76px)] w-full overflow-hidden">
-        <div className="mx-auto grid h-full max-w-7xl grid-cols-1 gap-5 px-4 py-4 sm:px-6 sm:py-6 lg:grid-cols-2 lg:gap-8">
-          <section className="hidden h-full min-h-0 overflow-y-auto rounded-3xl border border-white/10 bg-white/5 p-4 shadow-2xl backdrop-blur-xl lg:flex lg:flex-col lg:items-center lg:justify-center lg:p-6">
+        <div className="mx-auto grid h-full max-w-7xl grid-cols-1 grid-rows-[minmax(0,1fr)_minmax(0,1.15fr)] gap-4 px-4 py-4 sm:grid-rows-[minmax(0,1fr)_minmax(0,1.1fr)] sm:px-6 sm:py-6 lg:grid-cols-2 lg:grid-rows-1 lg:gap-8">
+          <section className="flex h-full min-h-0 flex-col items-center justify-center overflow-y-auto rounded-3xl border border-white/10 bg-white/5 p-3 shadow-2xl backdrop-blur-xl sm:p-5 lg:p-6">
             <Avatar status={status} />
 
             <Status status={status} />
@@ -569,7 +642,7 @@ function App() {
               onClick={handleVoice}
             />
 
-            <p className="mt-4 text-center text-xs text-gray-500 sm:text-sm">
+            <p className="mt-3 px-2 text-center text-xs text-gray-500 sm:text-sm">
               {isListening
                 ? "কথা বলো... আমি শুনছি 🎤"
                 : "Microphone চাপ দিয়ে কথা শুরু করো"}
@@ -578,14 +651,14 @@ function App() {
             {error && (
               <p
                 role="alert"
-                className="mt-4 max-w-md px-2 text-center text-sm text-red-300"
+                className="mt-3 max-w-md px-2 text-center text-xs text-red-300 sm:text-sm"
               >
                 {error}
               </p>
             )}
           </section>
 
-          <section className="h-full min-h-0 overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-4 shadow-2xl backdrop-blur-xl sm:p-6">
+          <section className="h-full min-h-0 overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-3 shadow-2xl backdrop-blur-xl sm:p-5 lg:p-6">
             <div className="h-full min-h-0 overflow-y-auto">
               <Chat messages={messages} />
             </div>
@@ -597,4 +670,3 @@ function App() {
 }
 
 export default App;
-
