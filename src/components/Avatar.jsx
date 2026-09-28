@@ -1,3 +1,4 @@
+```jsx
 import React from "react";
 import Avatargif from "../assets/avatar.gif";
 
@@ -29,17 +30,18 @@ function Avatar({ status = "idle", avatarGif = true }) {
     },
   };
 
-  const current = avatarData[status] || avatarData.idle;
+  const current =
+    avatarData[status] || avatarData.idle;
 
   return (
-    <div className="flex flex-col items-center px-4">
-      {/* Avatar Circle */}
+    <div className="w-full flex flex-col items-center px-4 py-6">
+
+      {/* Avatar */}
       <div
         className={`
           ${current.animation}
 
           w-32 h-32
-          xs:w-36 xs:h-36
           sm:w-44 sm:h-44
           md:w-52 md:h-52
           lg:w-60 lg:h-60
@@ -65,21 +67,20 @@ function Avatar({ status = "idle", avatarGif = true }) {
 
           transition-all
           duration-300
+
+          shrink-0
         `}
       >
         {avatarGif ? (
-          /* Custom GIF Avatar */
           <img
             src={Avatargif}
             alt="Montu AI Avatar"
             className="w-full h-full object-cover"
           />
         ) : (
-          /* Default Emoji Avatar */
           <span
             className="
               text-5xl
-              xs:text-6xl
               sm:text-7xl
               md:text-8xl
               lg:text-9xl
@@ -91,7 +92,7 @@ function Avatar({ status = "idle", avatarGif = true }) {
         )}
       </div>
 
-      {/* AI Name */}
+      {/* Name */}
       <h2
         className="
           mt-4
@@ -119,8 +120,71 @@ function Avatar({ status = "idle", avatarGif = true }) {
       >
         তোমার AI বন্ধু
       </p>
+
     </div>
   );
 }
 
 export default Avatar;
+```
+
+### Most important: change `App.jsx`
+
+Find your Avatar `<section>`:
+
+```jsx
+<section
+  className="
+    hidden lg:flex
+    h-full
+    min-h-0
+    ...
+    overflow-hidden
+  "
+>
+```
+
+Change **only** `overflow-hidden` to:
+
+```jsx
+overflow-y-auto
+```
+
+So:
+
+```jsx
+<section
+  className="
+    hidden lg:flex
+    h-full
+    min-h-0
+
+    rounded-3xl
+    border border-white/10
+    bg-white/5
+    backdrop-blur-xl
+
+    p-6 sm:p-8
+
+    flex-col
+    items-center
+    justify-center
+
+    shadow-2xl
+
+    overflow-y-auto
+  "
+>
+```
+
+### If you DON'T want the avatar to scroll
+
+If your actual goal is:
+
+* 🧑 Avatar stays fixed
+* 💬 Chat scrolls
+* 🖥️ Desktop page itself does NOT scroll
+
+then **keep `overflow-hidden` on the Avatar section**. The previous fix I gave you is the correct approach for that design.
+
+If you mean **"the avatar panel should never move while I scroll the chat"**, then don't make the avatar panel scrollable. The Chat panel should be the only scrolling area.
