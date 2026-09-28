@@ -1,4 +1,3 @@
-```javascript
 import { GoogleGenAI, Modality } from "@google/genai";
 
 const MODEL = "gemini-3.8-live";
@@ -169,12 +168,3 @@ export async function connectLive(callbacks = {}) {
 
   return session;
 }
-```
-
-এখন Montu যদি জিজ্ঞেস করা হয় **“তোমাকে কে বানিয়েছে?”**, সে বলতে পারবে:
-
-> “আমার creator হলেন Sourav Bosu! 😎 উনি একজন CSE student আর Full-Stack Developer। আমাকে বানিয়ে তোমার সাথে আড্ডা দেওয়ার দায়িত্বও উনিই দিয়েছেন! 😂”
-
-আর **নিজে থেকে প্রতিবার Sourav-এর পরিচয় দেবে না**—শুধু relevant প্রশ্ন হলে বলবে।
-
-চাইলে আমি পরের ধাপে Montu-কে **Sourav-এর নাম ধরে user-এর সাথে আরও natural personal conversation** করার মতো system instruction-ও সাজিয়ে দিতে পারি।
