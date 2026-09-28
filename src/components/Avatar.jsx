@@ -28,46 +28,53 @@ function Avatar({ status = "idle", avatarGif = true }) {
   const current = avatarData[status] || avatarData.idle;
 
   return (
-    <div className="w-full flex flex-col items-center px-4 py-6">
+    <div className="flex w-full flex-col items-center px-2 py-2 sm:px-4 sm:py-3">
       <div
         className={`
           ${current.animation}
-          w-32 h-32
-          sm:w-44 sm:h-44
-          md:w-52 md:h-52
-          lg:w-60 lg:h-60
-          rounded-full
           flex
+          h-24
+          w-24
+          shrink-0
           items-center
           justify-center
           overflow-hidden
+          rounded-full
+          border-4
+          border-white/20
           bg-gradient-to-br
           from-purple-500
           via-pink-500
           to-orange-400
-          border-4
-          border-white/20
           shadow-2xl
           shadow-purple-500/30
           transition-all
           duration-300
-          shrink-0
+          sm:h-32
+          sm:w-32
+          md:h-36
+          md:w-36
+          lg:h-44
+          lg:w-44
+          xl:h-48
+          xl:w-48
         `}
       >
         {avatarGif ? (
           <img
             src={Avatargif}
             alt="Montu AI Avatar"
-            className="w-full h-full object-cover"
+            className="h-full w-full object-cover"
           />
         ) : (
           <span
             className="
-              text-5xl
-              sm:text-7xl
-              md:text-8xl
-              lg:text-9xl
               select-none
+              text-4xl
+              sm:text-5xl
+              md:text-6xl
+              lg:text-7xl
+              xl:text-8xl
             "
           >
             {current.emoji}
@@ -77,14 +84,15 @@ function Avatar({ status = "idle", avatarGif = true }) {
 
       <h2
         className="
-          mt-4
-          sm:mt-5
-          text-lg
-          sm:text-xl
-          md:text-2xl
+          mt-2
+          text-base
           font-bold
-          text-white
           text-center
+          text-white
+          sm:mt-3
+          sm:text-lg
+          md:text-xl
+          lg:text-2xl
         "
       >
         Montu
@@ -93,10 +101,11 @@ function Avatar({ status = "idle", avatarGif = true }) {
       <p
         className="
           mt-1
-          text-xs
-          sm:text-sm
-          text-gray-400
           text-center
+          text-[11px]
+          text-gray-400
+          sm:text-xs
+          md:text-sm
         "
       >
         তোমার AI বন্ধু
