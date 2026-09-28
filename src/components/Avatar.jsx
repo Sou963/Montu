@@ -1,4 +1,3 @@
-```jsx
 import React from "react";
 import Avatargif from "../assets/avatar.gif";
 
@@ -175,16 +174,3 @@ So:
     overflow-y-auto
   "
 >
-```
-
-### If you DON'T want the avatar to scroll
-
-If your actual goal is:
-
-* 🧑 Avatar stays fixed
-* 💬 Chat scrolls
-* 🖥️ Desktop page itself does NOT scroll
-
-then **keep `overflow-hidden` on the Avatar section**. The previous fix I gave you is the correct approach for that design.
-
-If you mean **"the avatar panel should never move while I scroll the chat"**, then don't make the avatar panel scrollable. The Chat panel should be the only scrolling area.
