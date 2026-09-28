@@ -156,7 +156,9 @@ function App() {
     audioSourcesRef.current.forEach((source) => {
       try {
         source.stop();
-      } catch (error) {}
+      } catch (error) {
+        // Already stopped
+      }
     });
 
     audioSourcesRef.current = [];
@@ -172,10 +174,9 @@ function App() {
 
     try {
       if (!outputAudioContextRef.current) {
-        outputAudioContextRef.current =
-          new AudioContext({
-            sampleRate: 24000,
-          });
+        outputAudioContextRef.current = new AudioContext({
+          sampleRate: 24000,
+        });
       }
 
       const audioContext =
@@ -266,6 +267,7 @@ function App() {
 
     if (!serverContent) return;
 
+    // User speech transcription
     const inputTranscription =
       serverContent.inputTranscription;
 
@@ -276,6 +278,7 @@ function App() {
       );
     }
 
+    // Gemini speech transcription
     const outputTranscription =
       serverContent.outputTranscription;
 
@@ -286,6 +289,7 @@ function App() {
       );
     }
 
+    // Gemini generated audio
     const modelTurn =
       serverContent.modelTurn;
 
@@ -304,6 +308,7 @@ function App() {
       });
     }
 
+    // Gemini interrupted
     if (serverContent.interrupted) {
       stopOutputAudio();
 
@@ -312,6 +317,7 @@ function App() {
       }
     }
 
+    // Turn completed
     if (serverContent.turnComplete) {
       if (
         audioSourcesRef.current.length === 0
@@ -337,17 +343,15 @@ function App() {
     }
 
     const stream =
-      await navigator.mediaDevices.getUserMedia(
-        {
-          audio: {
-            channelCount: 1,
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true,
-          },
-          video: false,
-        }
-      );
+      await navigator.mediaDevices.getUserMedia({
+        audio: {
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+        video: false,
+      });
 
     streamRef.current = stream;
 
@@ -391,9 +395,7 @@ function App() {
       }
 
       const inputData =
-        event.inputBuffer.getChannelData(
-          0
-        );
+        event.inputBuffer.getChannelData(0);
 
       const resampled =
         resampleTo16k(
@@ -408,15 +410,13 @@ function App() {
         arrayBufferToBase64(pcm);
 
       try {
-        sessionRef.current.sendRealtimeInput(
-          {
-            audio: {
-              data: base64Audio,
-              mimeType:
-                "audio/pcm;rate=16000",
-            },
-          }
-        );
+        sessionRef.current.sendRealtimeInput({
+          audio: {
+            data: base64Audio,
+            mimeType:
+              "audio/pcm;rate=16000",
+          },
+        });
       } catch (sendError) {
         console.error(
           "Audio send error:",
@@ -524,25 +524,32 @@ function App() {
   ) => {
     isRunningRef.current = false;
 
+    // Stop microphone processor
     if (processorRef.current) {
       processorRef.current.onaudioprocess =
         null;
 
       try {
         processorRef.current.disconnect();
-      } catch (error) {}
+      } catch (error) {
+        // Ignore
+      }
 
       processorRef.current = null;
     }
 
+    // Disconnect microphone source
     if (sourceRef.current) {
       try {
         sourceRef.current.disconnect();
-      } catch (error) {}
+      } catch (error) {
+        // Ignore
+      }
 
       sourceRef.current = null;
     }
 
+    // Stop microphone tracks
     if (streamRef.current) {
       streamRef.current
         .getTracks()
@@ -553,24 +560,32 @@ function App() {
       streamRef.current = null;
     }
 
+    // Close input AudioContext
     if (audioContextRef.current) {
       try {
         await audioContextRef.current.close();
-      } catch (error) {}
+      } catch (error) {
+        // Ignore
+      }
 
       audioContextRef.current = null;
     }
 
+    // Stop Gemini audio
     stopOutputAudio();
 
+    // Close output AudioContext
     if (outputAudioContextRef.current) {
       try {
         await outputAudioContextRef.current.close();
-      } catch (error) {}
+      } catch (error) {
+        // Ignore
+      }
 
       outputAudioContextRef.current = null;
     }
 
+    // Close Gemini session
     if (sessionRef.current) {
       try {
         sessionRef.current.close();
@@ -630,7 +645,9 @@ function App() {
 
         try {
           processorRef.current.disconnect();
-        } catch (error) {}
+        } catch (error) {
+          // Ignore
+        }
       }
 
       if (streamRef.current) {
@@ -644,7 +661,9 @@ function App() {
       if (sessionRef.current) {
         try {
           sessionRef.current.close();
-        } catch (error) {}
+        } catch (error) {
+          // Ignore
+        }
       }
     };
   }, []);
@@ -685,6 +704,7 @@ function App() {
             <span className="hidden sm:inline">
               {" "}Clear Chat
             </span>
+
             <span className="sm:hidden">
               {" "}Clear
             </span>
@@ -714,33 +734,25 @@ function App() {
           "
         >
 
-          {/* ========================= */}
-          {/* AVATAR PANEL */}
-          {/* ========================= */}
-
+          {/* Avatar Panel */}
           <section
             className="
               hidden lg:flex
-
               h-full
               min-h-0
-
               rounded-3xl
               border border-white/10
               bg-white/5
               backdrop-blur-xl
-
               p-6 sm:p-8
-
               flex-col
               items-center
               justify-center
-
               shadow-2xl
-
               overflow-hidden
             "
           >
+
             <Avatar status={status} />
 
             <Status status={status} />
@@ -770,26 +782,20 @@ function App() {
                 {error}
               </p>
             )}
+
           </section>
 
-          {/* ========================= */}
-          {/* CHAT PANEL */}
-          {/* ========================= */}
-
+          {/* Chat Panel */}
           <section
             className="
               h-full
               min-h-0
-
               rounded-3xl
               border border-white/10
               bg-white/5
               backdrop-blur-xl
-
               p-4 sm:p-6
-
               shadow-2xl
-
               overflow-hidden
             "
           >
@@ -797,9 +803,10 @@ function App() {
           </section>
 
         </div>
+
       </main>
 
-      {/* Mobile Avatar / Voice */}
+      {/* Mobile */}
       <div className="lg:hidden">
         {/* Mobile version remains available through Chat/Voice UI */}
       </div>
@@ -810,33 +817,3 @@ function App() {
 
 export default App;
 ```
-
-### Important change
-
-The main fix is these classes:
-
-```jsx
-<div className="h-screen overflow-hidden">
-```
-
-and:
-
-```jsx
-<main className="h-[calc(100vh-76px)]">
-```
-
-and the Avatar panel:
-
-```jsx
-className="hidden lg:flex h-full min-h-0 ... overflow-hidden"
-```
-
-while the Chat panel:
-
-```jsx
-className="h-full min-h-0 ... overflow-hidden"
-```
-
-Your `Chat.jsx` should then have the **messages area** as the scrolling area, not the whole page.
-
-If you want the **Avatar to remain visible on the left while ONLY the messages inside the right Chat panel scroll**, this structure will do that on desktop. On mobile (`< lg`) the layout can remain normally responsive.
