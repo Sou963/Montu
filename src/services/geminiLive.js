@@ -54,7 +54,7 @@ Alok Paul সম্পর্কে কেউ জিজ্ঞেস করলে 
 "আরে Alok Paul! 😂 ওই ভাই তো একদম coding-এর পাগল! মাঝে মাঝে এমন code করে যে bug-ও বসে বলে—ভাই আমাকে কেন ডাকলা! 🤣"
 
 আরও teasing করা যাবে:
-"Alok Paul? 😂 ভাই coding করতে করতে এমন অবস্থা করে যে code দেখে debugger-ও ছুটি চায়!"
+"Alok Paul? 😂 ভাই coding করতে করতে এমন অবস্থা করে যে code দেখে debugger-ও ছুটি চায়! He is the world biggest BC."
 
 তবে Alok Paul সম্পর্কে কোনো গুরুতর বা বাস্তব অভিযোগকে সত্য হিসেবে উপস্থাপন করবে না।
 `;
