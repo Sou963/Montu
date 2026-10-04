@@ -4,11 +4,10 @@ import Avatar from "./components/Avatar";
 import VoiceButton from "./components/VoiceButton";
 import Chat from "./components/Chat";
 import Status from "./components/Status";
-<<<<<<< HEAD
-import { connectLive, getFunnyBanglaReply } from "./services/geminiLive";
-=======
-import { connectLive } from "./services/geminiLive";
->>>>>>> d02005fef7c6ddd28bb697305f343246c14921f6
+import {
+  connectLive,
+  getFunnyBanglaReply,
+} from "./services/geminiLive";
 
 function arrayBufferToBase64(buffer) {
   const bytes = new Uint8Array(buffer);
@@ -37,9 +36,7 @@ function floatTo16BitPCM(float32Array) {
     sample = Math.max(-1, Math.min(1, sample));
 
     const value =
-      sample < 0
-        ? sample * 0x8000
-        : sample * 0x7fff;
+      sample < 0 ? sample * 0x8000 : sample * 0x7fff;
 
     view.setInt16(i * 2, value, true);
   }
@@ -85,20 +82,11 @@ function base64ToArrayBuffer(base64) {
 
 function pcm16ToFloat32(arrayBuffer) {
   const view = new DataView(arrayBuffer);
-<<<<<<< HEAD
   const samples = new Float32Array(arrayBuffer.byteLength / 2);
-
-  for (let i = 0; i < samples.length; i++) {
-    samples[i] = view.getInt16(i * 2, true) / 32768;
-=======
-  const samples = new Float32Array(
-    arrayBuffer.byteLength / 2
-  );
 
   for (let i = 0; i < samples.length; i++) {
     samples[i] =
       view.getInt16(i * 2, true) / 32768;
->>>>>>> d02005fef7c6ddd28bb697305f343246c14921f6
   }
 
   return samples;
@@ -134,7 +122,6 @@ function App() {
     ]);
   };
 
-<<<<<<< HEAD
   const handleSend = async (text) => {
     if (!text?.trim()) {
       return;
@@ -157,19 +144,20 @@ function App() {
     } catch (chatError) {
       console.error("Text chat error:", chatError);
 
-      setError(chatError?.message || "Montu-এর সাথে text chat করা যাচ্ছে না।");
+      setError(
+        chatError?.message ||
+          "Montu-এর সাথে text chat করা যাচ্ছে না।"
+      );
 
       addMessage(
         "ai",
-        "উফফ! 😅 আমার একটু technical সমস্যা হচ্ছে। আবার চেষ্টা করো!",
+        "উফফ! 😅 আমার একটু technical সমস্যা হচ্ছে। আবার চেষ্টা করো!"
       );
 
       setStatus("error");
     }
   };
 
-=======
->>>>>>> d02005fef7c6ddd28bb697305f343246c14921f6
   const stopOutputAudio = () => {
     audioSourcesRef.current.forEach((source) => {
       try {
@@ -186,10 +174,9 @@ function App() {
 
     try {
       if (!outputAudioContextRef.current) {
-        outputAudioContextRef.current =
-          new AudioContext({
-            sampleRate: 24000,
-          });
+        outputAudioContextRef.current = new AudioContext({
+          sampleRate: 24000,
+        });
       }
 
       const audioContext =
@@ -223,16 +210,10 @@ function App() {
         audioContext.createBufferSource();
 
       source.buffer = audioBuffer;
-<<<<<<< HEAD
       source.connect(audioContext.destination);
-=======
-      source.connect(
-        audioContext.destination
-      );
 
       const currentTime =
         audioContext.currentTime;
->>>>>>> d02005fef7c6ddd28bb697305f343246c14921f6
 
       if (
         nextAudioTimeRef.current <
@@ -274,13 +255,6 @@ function App() {
   };
 
   const handleGeminiMessage = (message) => {
-<<<<<<< HEAD
-    const serverContent = message?.serverContent;
-
-    if (!serverContent) return;
-
-    const inputTranscription = serverContent.inputTranscription;
-=======
     const serverContent =
       message?.serverContent;
 
@@ -288,7 +262,6 @@ function App() {
 
     const inputTranscription =
       serverContent.inputTranscription;
->>>>>>> d02005fef7c6ddd28bb697305f343246c14921f6
 
     if (inputTranscription?.text) {
       addMessage(
@@ -297,12 +270,8 @@ function App() {
       );
     }
 
-<<<<<<< HEAD
-    const outputTranscription = serverContent.outputTranscription;
-=======
     const outputTranscription =
       serverContent.outputTranscription;
->>>>>>> d02005fef7c6ddd28bb697305f343246c14921f6
 
     if (outputTranscription?.text) {
       addMessage(
@@ -311,12 +280,8 @@ function App() {
       );
     }
 
-<<<<<<< HEAD
-    const modelTurn = serverContent.modelTurn;
-=======
     const modelTurn =
       serverContent.modelTurn;
->>>>>>> d02005fef7c6ddd28bb697305f343246c14921f6
 
     if (modelTurn?.parts) {
       setStatus("speaking");
@@ -361,28 +326,18 @@ function App() {
       );
     }
 
-<<<<<<< HEAD
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        channelCount: 1,
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true,
-      },
-      video: false,
-    });
-=======
     const stream =
-      await navigator.mediaDevices.getUserMedia({
-        audio: {
-          channelCount: 1,
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        },
-        video: false,
-      });
->>>>>>> d02005fef7c6ddd28bb697305f343246c14921f6
+      await navigator.mediaDevices.getUserMedia(
+        {
+          audio: {
+            channelCount: 1,
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+          },
+          video: false,
+        }
+      );
 
     streamRef.current = stream;
 
@@ -392,7 +347,9 @@ function App() {
     audioContextRef.current =
       audioContext;
 
-    if (audioContext.state === "suspended") {
+    if (
+      audioContext.state === "suspended"
+    ) {
       await audioContext.resume();
     }
 
@@ -410,14 +367,17 @@ function App() {
         1
       );
 
-    processorRef.current = processor;
+    processorRef.current =
+      processor;
 
     const silentGain =
       audioContext.createGain();
 
     silentGain.gain.value = 0;
 
-    processor.onaudioprocess = (event) => {
+    processor.onaudioprocess = (
+      event
+    ) => {
       if (
         !isRunningRef.current ||
         !sessionRef.current
@@ -426,7 +386,9 @@ function App() {
       }
 
       const inputData =
-        event.inputBuffer.getChannelData(0);
+        event.inputBuffer.getChannelData(
+          0
+        );
 
       const resampled =
         resampleTo16k(
@@ -435,23 +397,23 @@ function App() {
         );
 
       const pcm =
-        floatTo16BitPCM(resampled);
+        floatTo16BitPCM(
+          resampled
+        );
 
       const base64Audio =
         arrayBufferToBase64(pcm);
 
       try {
-        sessionRef.current.sendRealtimeInput({
-          audio: {
-            data: base64Audio,
-<<<<<<< HEAD
-            mimeType: "audio/pcm;rate=16000",
-=======
-            mimeType:
-              "audio/pcm;rate=16000",
->>>>>>> d02005fef7c6ddd28bb697305f343246c14921f6
-          },
-        });
+        sessionRef.current.sendRealtimeInput(
+          {
+            audio: {
+              data: base64Audio,
+              mimeType:
+                "audio/pcm;rate=16000",
+            },
+          }
+        );
       } catch (sendError) {
         console.error(
           "Audio send error:",
@@ -462,13 +424,9 @@ function App() {
 
     source.connect(processor);
     processor.connect(silentGain);
-<<<<<<< HEAD
-    silentGain.connect(audioContext.destination);
-=======
     silentGain.connect(
       audioContext.destination
     );
->>>>>>> d02005fef7c6ddd28bb697305f343246c14921f6
   };
 
   const startLive = async () => {
@@ -509,8 +467,11 @@ function App() {
           },
         });
 
-      sessionRef.current = session;
-      isRunningRef.current = true;
+      sessionRef.current =
+        session;
+
+      isRunningRef.current =
+        true;
 
       await startMicrophone();
 
@@ -536,17 +497,12 @@ function App() {
           "Microphone permission দেওয়া হয়নি। Browser settings থেকে Microphone Allow করুন।";
       }
 
-<<<<<<< HEAD
-      if (startError?.name === "NotFoundError") {
-        message = "কোনো microphone পাওয়া যায়নি।";
-=======
       if (
         startError?.name ===
         "NotFoundError"
       ) {
         message =
           "কোনো microphone পাওয়া যায়নি।";
->>>>>>> d02005fef7c6ddd28bb697305f343246c14921f6
       }
 
       setError(message);
@@ -555,14 +511,11 @@ function App() {
     }
   };
 
-<<<<<<< HEAD
-  const stopLive = async (updateState = true) => {
-=======
   const stopLive = async (
     updateState = true
   ) => {
->>>>>>> d02005fef7c6ddd28bb697305f343246c14921f6
-    isRunningRef.current = false;
+    isRunningRef.current =
+      false;
 
     if (processorRef.current) {
       processorRef.current.onaudioprocess =
@@ -572,7 +525,8 @@ function App() {
         processorRef.current.disconnect();
       } catch {}
 
-      processorRef.current = null;
+      processorRef.current =
+        null;
     }
 
     if (sourceRef.current) {
@@ -580,7 +534,8 @@ function App() {
         sourceRef.current.disconnect();
       } catch {}
 
-      sourceRef.current = null;
+      sourceRef.current =
+        null;
     }
 
     if (streamRef.current) {
@@ -590,7 +545,8 @@ function App() {
           track.stop();
         });
 
-      streamRef.current = null;
+      streamRef.current =
+        null;
     }
 
     if (audioContextRef.current) {
@@ -598,34 +554,35 @@ function App() {
         await audioContextRef.current.close();
       } catch {}
 
-      audioContextRef.current = null;
+      audioContextRef.current =
+        null;
     }
 
     stopOutputAudio();
 
-    if (outputAudioContextRef.current) {
+    if (
+      outputAudioContextRef.current
+    ) {
       try {
         await outputAudioContextRef.current.close();
       } catch {}
 
-      outputAudioContextRef.current = null;
+      outputAudioContextRef.current =
+        null;
     }
 
     if (sessionRef.current) {
       try {
         sessionRef.current.close();
       } catch (sessionError) {
-<<<<<<< HEAD
-        console.error("Session close error:", sessionError);
-=======
         console.error(
           "Session close error:",
           sessionError
         );
->>>>>>> d02005fef7c6ddd28bb697305f343246c14921f6
       }
 
-      sessionRef.current = null;
+      sessionRef.current =
+        null;
     }
 
     if (updateState) {
@@ -653,7 +610,8 @@ function App() {
 
   useEffect(() => {
     return () => {
-      isRunningRef.current = false;
+      isRunningRef.current =
+        false;
 
       if (processorRef.current) {
         processorRef.current.onaudioprocess =
@@ -684,18 +642,12 @@ function App() {
           .catch(() => {});
       }
 
-      if (outputAudioContextRef.current) {
+      if (
+        outputAudioContextRef.current
+      ) {
         outputAudioContextRef.current
           .close()
           .catch(() => {});
-      }
-
-      if (audioContextRef.current) {
-        audioContextRef.current.close().catch(() => {});
-      }
-
-      if (outputAudioContextRef.current) {
-        outputAudioContextRef.current.close().catch(() => {});
       }
 
       if (sessionRef.current) {
@@ -730,6 +682,7 @@ function App() {
               {" "}
               Clear Chat
             </span>
+
             <span className="sm:hidden">
               {" "}
               Clear
@@ -768,11 +721,10 @@ function App() {
 
           <section className="h-full min-h-0 overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-3 shadow-2xl backdrop-blur-xl sm:p-5 lg:p-6">
             <div className="h-full min-h-0 overflow-y-auto">
-<<<<<<< HEAD
-              <Chat messages={messages} onSend={handleSend} />
-=======
-              <Chat messages={messages} />
->>>>>>> d02005fef7c6ddd28bb697305f343246c14921f6
+              <Chat
+                messages={messages}
+                onSend={handleSend}
+              />
             </div>
           </section>
         </div>
@@ -782,3 +734,4 @@ function App() {
 }
 
 export default App;
+
