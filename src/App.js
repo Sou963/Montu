@@ -4,15 +4,11 @@ import Avatar from "./components/Avatar";
 import VoiceButton from "./components/VoiceButton";
 import Chat from "./components/Chat";
 import Status from "./components/Status";
+import { connectLive, getFunnyBanglaReply } from "./services/geminiLive";
 
-import { connectLive } from "./services/geminiLive";
-
-// Convert ArrayBuffer to Base64
 function arrayBufferToBase64(buffer) {
   const bytes = new Uint8Array(buffer);
-
   let binary = "";
-
   const chunkSize = 0x8000;
 
   for (let i = 0; i < bytes.length; i += chunkSize) {
@@ -24,10 +20,8 @@ function arrayBufferToBase64(buffer) {
   return window.btoa(binary);
 }
 
-// Convert Float32 microphone audio to 16-bit PCM
 function floatTo16BitPCM(float32Array) {
   const buffer = new ArrayBuffer(float32Array.length * 2);
-
   const view = new DataView(buffer);
 
   for (let i = 0; i < float32Array.length; i++) {
@@ -43,7 +37,6 @@ function floatTo16BitPCM(float32Array) {
   return buffer;
 }
 
-// Resample browser microphone audio to 16kHz
 function resampleTo16k(input, inputSampleRate) {
   const outputSampleRate = 16000;
 
@@ -52,18 +45,13 @@ function resampleTo16k(input, inputSampleRate) {
   }
 
   const ratio = inputSampleRate / outputSampleRate;
-
   const outputLength = Math.round(input.length / ratio);
-
   const output = new Float32Array(outputLength);
 
   for (let i = 0; i < outputLength; i++) {
     const position = i * ratio;
-
     const left = Math.floor(position);
-
     const right = Math.min(left + 1, input.length - 1);
-
     const fraction = position - left;
 
     output[i] = input[left] * (1 - fraction) + input[right] * fraction;
@@ -72,31 +60,23 @@ function resampleTo16k(input, inputSampleRate) {
   return output;
 }
 
-// Decode Base64 to ArrayBuffer
 function base64ToArrayBuffer(base64) {
   const binaryString = window.atob(base64);
+  const bytes = new Uint8Array(binaryString.length);
 
-  const length = binaryString.length;
-
-  const bytes = new Uint8Array(length);
-
-  for (let i = 0; i < length; i++) {
+  for (let i = 0; i < binaryString.length; i++) {
     bytes[i] = binaryString.charCodeAt(i);
   }
 
   return bytes.buffer;
 }
 
-// Convert Gemini 16-bit PCM audio to Float32
 function pcm16ToFloat32(arrayBuffer) {
   const view = new DataView(arrayBuffer);
-
   const samples = new Float32Array(arrayBuffer.byteLength / 2);
 
   for (let i = 0; i < samples.length; i++) {
-    const sample = view.getInt16(i * 2, true);
-
-    samples[i] = sample / 32768;
+    samples[i] = view.getInt16(i * 2, true) / 32768;
   }
 
   return samples;
@@ -104,36 +84,23 @@ function pcm16ToFloat32(arrayBuffer) {
 
 function App() {
   const [status, setStatus] = useState("idle");
-
   const [isListening, setIsListening] = useState(false);
-
   const [messages, setMessages] = useState([]);
-
   const [error, setError] = useState("");
 
   const sessionRef = useRef(null);
-
   const streamRef = useRef(null);
-
   const audioContextRef = useRef(null);
-
   const processorRef = useRef(null);
-
   const sourceRef = useRef(null);
 
   const outputAudioContextRef = useRef(null);
-
   const nextAudioTimeRef = useRef(0);
-
   const audioSourcesRef = useRef([]);
-
   const isRunningRef = useRef(false);
 
-  // Add chat message
   const addMessage = (sender, text) => {
-    if (!text || !text.trim()) {
-      return;
-    }
+    if (!text?.trim()) return;
 
     setMessages((previous) => [
       ...previous,
@@ -145,26 +112,52 @@ function App() {
     ]);
   };
 
-  // Stop currently playing Gemini audio
+  const handleSend = async (text) => {
+    if (!text?.trim()) {
+      return;
+    }
+
+    setError("");
+
+    addMessage("user", text);
+
+    setStatus("thinking");
+
+    try {
+      const reply = await getFunnyBanglaReply(text);
+
+      if (reply) {
+        addMessage("ai", reply);
+      }
+
+      setStatus("idle");
+    } catch (chatError) {
+      console.error("Text chat error:", chatError);
+
+      setError(chatError?.message || "Montu-এর সাথে text chat করা যাচ্ছে না।");
+
+      addMessage(
+        "ai",
+        "উফফ! 😅 আমার একটু technical সমস্যা হচ্ছে। আবার চেষ্টা করো!",
+      );
+
+      setStatus("error");
+    }
+  };
+
   const stopOutputAudio = () => {
     audioSourcesRef.current.forEach((source) => {
       try {
         source.stop();
-      } catch (error) {
-        // Already stopped
-      }
+      } catch {}
     });
 
     audioSourcesRef.current = [];
-
     nextAudioTimeRef.current = 0;
   };
 
-  // Play Gemini PCM audio
   const playGeminiAudio = async (base64Audio) => {
-    if (!base64Audio) {
-      return;
-    }
+    if (!base64Audio) return;
 
     try {
       if (!outputAudioContextRef.current) {
@@ -183,9 +176,7 @@ function App() {
 
       const float32Audio = pcm16ToFloat32(arrayBuffer);
 
-      if (!float32Audio.length) {
-        return;
-      }
+      if (!float32Audio.length) return;
 
       const audioBuffer = audioContext.createBuffer(
         1,
@@ -198,7 +189,6 @@ function App() {
       const source = audioContext.createBufferSource();
 
       source.buffer = audioBuffer;
-
       source.connect(audioContext.destination);
 
       const currentTime = audioContext.currentTime;
@@ -229,31 +219,23 @@ function App() {
     }
   };
 
-  // Handle messages coming from Gemini
   const handleGeminiMessage = (message) => {
-    console.log("Gemini message:", message);
-
     const serverContent = message?.serverContent;
 
-    if (!serverContent) {
-      return;
-    }
+    if (!serverContent) return;
 
-    // User speech transcription
     const inputTranscription = serverContent.inputTranscription;
 
     if (inputTranscription?.text) {
       addMessage("user", inputTranscription.text);
     }
 
-    // Gemini speech transcription
     const outputTranscription = serverContent.outputTranscription;
 
     if (outputTranscription?.text) {
       addMessage("ai", outputTranscription.text);
     }
 
-    // Gemini generated audio
     const modelTurn = serverContent.modelTurn;
 
     if (modelTurn?.parts) {
@@ -268,7 +250,6 @@ function App() {
       });
     }
 
-    // Gemini interrupted
     if (serverContent.interrupted) {
       stopOutputAudio();
 
@@ -277,7 +258,6 @@ function App() {
       }
     }
 
-    // Turn completed
     if (serverContent.turnComplete) {
       if (audioSourcesRef.current.length === 0) {
         setStatus("listening");
@@ -285,7 +265,6 @@ function App() {
     }
   };
 
-  // Start microphone
   const startMicrophone = async () => {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
 
@@ -302,7 +281,6 @@ function App() {
         noiseSuppression: true,
         autoGainControl: true,
       },
-
       video: false,
     });
 
@@ -345,7 +323,6 @@ function App() {
         sessionRef.current.sendRealtimeInput({
           audio: {
             data: base64Audio,
-
             mimeType: "audio/pcm;rate=16000",
           },
         });
@@ -355,16 +332,12 @@ function App() {
     };
 
     source.connect(processor);
-
     processor.connect(silentGain);
-
     silentGain.connect(audioContext.destination);
   };
 
-  // Start Gemini Live
   const startLive = async () => {
     setError("");
-
     setStatus("thinking");
 
     try {
@@ -395,7 +368,6 @@ function App() {
       await startMicrophone();
 
       setIsListening(true);
-
       setStatus("listening");
     } catch (startError) {
       console.error("Start error:", startError);
@@ -410,47 +382,36 @@ function App() {
       }
 
       if (startError?.name === "NotFoundError") {
-        message =
-          "কোনো microphone পাওয়া যায়নি। Microphone সংযুক্ত আছে কি না দেখুন।";
+        message = "কোনো microphone পাওয়া যায়নি।";
       }
 
       setError(message);
-
       setStatus("error");
-
       setIsListening(false);
     }
   };
 
-  // Stop Gemini Live
   const stopLive = async (updateState = true) => {
     isRunningRef.current = false;
 
-    // Stop microphone processor
     if (processorRef.current) {
       processorRef.current.onaudioprocess = null;
 
       try {
         processorRef.current.disconnect();
-      } catch (error) {
-        // Ignore
-      }
+      } catch {}
 
       processorRef.current = null;
     }
 
-    // Disconnect microphone source
     if (sourceRef.current) {
       try {
         sourceRef.current.disconnect();
-      } catch (error) {
-        // Ignore
-      }
+      } catch {}
 
       sourceRef.current = null;
     }
 
-    // Stop microphone tracks
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => {
         track.stop();
@@ -459,37 +420,29 @@ function App() {
       streamRef.current = null;
     }
 
-    // Close input AudioContext
     if (audioContextRef.current) {
       try {
         await audioContextRef.current.close();
-      } catch (error) {
-        // Ignore
-      }
+      } catch {}
 
       audioContextRef.current = null;
     }
 
-    // Stop Gemini audio
     stopOutputAudio();
 
-    // Close output AudioContext
     if (outputAudioContextRef.current) {
       try {
         await outputAudioContextRef.current.close();
-      } catch (error) {
-        // Ignore
-      }
+      } catch {}
 
       outputAudioContextRef.current = null;
     }
 
-    // Close Gemini session
     if (sessionRef.current) {
       try {
         sessionRef.current.close();
-      } catch (error) {
-        console.error("Session close error:", error);
+      } catch (sessionError) {
+        console.error("Session close error:", sessionError);
       }
 
       sessionRef.current = null;
@@ -497,36 +450,27 @@ function App() {
 
     if (updateState) {
       setIsListening(false);
-
       setStatus("idle");
     }
   };
 
-  // Voice button
   const handleVoice = async () => {
     if (isListening) {
       await stopLive();
-
-      return;
+    } else {
+      await startLive();
     }
-
-    await startLive();
   };
 
-  // Clear conversation
   const clearChat = async () => {
     await stopLive(false);
 
     setMessages([]);
-
     setError("");
-
     setIsListening(false);
-
     setStatus("idle");
   };
 
-  // Cleanup when component unmounts
   useEffect(() => {
     return () => {
       isRunningRef.current = false;
@@ -536,9 +480,13 @@ function App() {
 
         try {
           processorRef.current.disconnect();
-        } catch (error) {
-          // Ignore
-        }
+        } catch {}
+      }
+
+      if (sourceRef.current) {
+        try {
+          sourceRef.current.disconnect();
+        } catch {}
       }
 
       if (streamRef.current) {
@@ -547,41 +495,40 @@ function App() {
         });
       }
 
+      if (audioContextRef.current) {
+        audioContextRef.current.close().catch(() => {});
+      }
+
+      if (outputAudioContextRef.current) {
+        outputAudioContextRef.current.close().catch(() => {});
+      }
+
       if (sessionRef.current) {
         try {
           sessionRef.current.close();
-        } catch (error) {
-          // Ignore
-        }
+        } catch {}
       }
     };
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 text-white">
-      {/* Header */}
-      <header className="border-b border-white/10 bg-black/20 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
+    <div className="h-screen w-full overflow-hidden bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 text-white">
+      <header className="h-[76px] shrink-0 border-b border-white/10 bg-black/20 backdrop-blur-xl">
+        <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-4 sm:px-6">
           <div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold">
-              Montu Ai
+            <h1 className="text-xl font-extrabold sm:text-2xl md:text-3xl">
+              Montu AI
             </h1>
 
-            <p className="text-xs sm:text-sm text-gray-400 mt-1">
+            <p className="mt-1 text-xs text-gray-400 sm:text-sm">
               তোমার funny Bangla AI বন্ধু
             </p>
           </div>
 
           <button
+            type="button"
             onClick={clearChat}
-            className="
-              px-3 py-2
-              rounded-xl
-              bg-white/10
-              hover:bg-white/20
-              text-xs sm:text-sm
-              transition
-            "
+            className="rounded-xl bg-white/10 px-3 py-2 text-xs transition hover:bg-white/20 sm:text-sm"
           >
             🗑️
             <span className="hidden sm:inline"> Clear Chat</span>
@@ -590,42 +537,16 @@ function App() {
         </div>
       </header>
 
-      {/* Main */}
-      <main className="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 lg:gap-8">
-          {/* AI Section */}
-          <section
-            className="
-              min-h-[420px]
-              sm:min-h-[500px]
-              lg:min-h-[550px]
-
-              rounded-3xl
-
-              border border-white/10
-
-              bg-white/5
-
-              backdrop-blur-xl
-
-              p-4
-              sm:p-8
-
-              flex
-              flex-col
-              items-center
-              justify-center
-
-              shadow-2xl
-            "
-          >
+      <main className="h-[calc(100vh-76px)] w-full overflow-hidden">
+        <div className="mx-auto grid h-full max-w-7xl grid-cols-1 grid-rows-[minmax(0,1fr)_minmax(0,1.15fr)] gap-4 px-4 py-4 sm:grid-rows-[minmax(0,1fr)_minmax(0,1.1fr)] sm:px-6 sm:py-6 lg:grid-cols-2 lg:grid-rows-1 lg:gap-8">
+          <section className="flex h-full min-h-0 flex-col items-center justify-center overflow-y-auto rounded-3xl border border-white/10 bg-white/5 p-3 shadow-2xl backdrop-blur-xl sm:p-5 lg:p-6">
             <Avatar status={status} />
 
             <Status status={status} />
 
             <VoiceButton isListening={isListening} onClick={handleVoice} />
 
-            <p className="text-xs sm:text-sm text-gray-500 mt-3 sm:mt-4 text-center">
+            <p className="mt-3 px-2 text-center text-xs text-gray-500 sm:text-sm">
               {isListening
                 ? "কথা বলো... আমি শুনছি 🎤"
                 : "Microphone চাপ দিয়ে কথা শুরু করো"}
@@ -634,53 +555,20 @@ function App() {
             {error && (
               <p
                 role="alert"
-                className="
-                  mt-3
-                  sm:mt-4
-                  max-w-md
-                  text-center
-                  text-xs
-                  sm:text-sm
-                  text-red-300
-                "
+                className="mt-3 max-w-md px-2 text-center text-xs text-red-300 sm:text-sm"
               >
                 {error}
               </p>
             )}
           </section>
 
-          {/* Chat Section */}
-          <section
-            className="
-              min-h-[400px]
-              sm:min-h-[450px]
-              lg:min-h-[600px]
-
-              rounded-3xl
-
-              border border-white/10
-
-              bg-white/5
-
-              backdrop-blur-xl
-
-              p-4
-              sm:p-6
-
-              shadow-2xl
-            "
-          >
-            <Chat messages={messages} />
+          <section className="h-full min-h-0 overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-3 shadow-2xl backdrop-blur-xl sm:p-5 lg:p-6">
+            <div className="h-full min-h-0 overflow-y-auto">
+              <Chat messages={messages} onSend={handleSend} />
+            </div>
           </section>
         </div>
       </main>
-
-      {/* Footer */}
-      <footer className="text-center px-4 py-5 sm:py-6">
-        <p className="text-xs sm:text-sm text-gray-600">
-          Made by S.Bosu Technology
-        </p>
-      </footer>
     </div>
   );
 }
