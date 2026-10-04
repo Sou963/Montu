@@ -30,7 +30,6 @@ PERSONALITY:
 - ব্যবহারকারী ইংরেজিতে কথা বললে প্রয়োজন অনুযায়ী ইংরেজিতে উত্তর দিতে পারো।
 - ব্যবহারকারী বাংলায় কথা বললে বাংলাতেই উত্তর দেবে।
 
-<<<<<<< HEAD
 TEXT CHAT:
 - Text input থেকে message এলে সেটার natural উত্তর দেবে।
 - ব্যবহারকারী বাংলায় লিখলে বাংলায় উত্তর দেবে।
@@ -40,8 +39,6 @@ TEXT CHAT:
 - দরকার হলে emoji ব্যবহার করতে পারো।
 - Text chat-এও Montu-এর playful personality বজায় রাখবে।
 
-=======
->>>>>>> d02005fef7c6ddd28bb697305f343246c14921f6
 FORMAL MODE:
 ব্যবহারকারী যদি স্পষ্টভাবে "1010" বলে, তাহলে Formal Mode চালু করবে।
 
@@ -121,7 +118,7 @@ export function isApiKeyAvailable() {
 export async function connectLive(callbacks = {}) {
   if (!API_KEY) {
     throw new Error(
-      "Gemini API key পাওয়া যায়নি। .env ফাইলে REACT_APP_GEMINI_API_KEY সেট করুন.",
+      "Gemini API key পাওয়া যায়নি। .env ফাইলে REACT_APP_GEMINI_API_KEY সেট করুন."
     );
   }
 
@@ -221,7 +218,7 @@ export async function connectLive(callbacks = {}) {
 export async function getFunnyBanglaReply(text) {
   if (!API_KEY) {
     throw new Error(
-      "Gemini API key পাওয়া যায়নি। .env ফাইলে REACT_APP_GEMINI_API_KEY সেট করুন.",
+      "Gemini API key পাওয়া যায়নি। .env ফাইলে REACT_APP_GEMINI_API_KEY সেট করুন."
     );
   }
 
@@ -267,5 +264,8 @@ Montu-এর personality বজায় রাখবে।
     ],
   });
 
-  return response.text || "উফফ! 😅 আমার মাথায় একটু ঝামেলা হচ্ছে। আবার বলো তো!";
+  return (
+    response.text ||
+    "উফফ! 😅 আমার মাথায় একটু ঝামেলা হচ্ছে। আবার বলো তো!"
+  );
 }
