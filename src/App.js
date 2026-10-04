@@ -4,7 +4,11 @@ import Avatar from "./components/Avatar";
 import VoiceButton from "./components/VoiceButton";
 import Chat from "./components/Chat";
 import Status from "./components/Status";
+<<<<<<< HEAD
 import { connectLive, getFunnyBanglaReply } from "./services/geminiLive";
+=======
+import { connectLive } from "./services/geminiLive";
+>>>>>>> d02005fef7c6ddd28bb697305f343246c14921f6
 
 function arrayBufferToBase64(buffer) {
   const bytes = new Uint8Array(buffer);
@@ -12,7 +16,10 @@ function arrayBufferToBase64(buffer) {
   const chunkSize = 0x8000;
 
   for (let i = 0; i < bytes.length; i += chunkSize) {
-    const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.length));
+    const chunk = bytes.subarray(
+      i,
+      Math.min(i + chunkSize, bytes.length)
+    );
 
     binary += String.fromCharCode(...chunk);
   }
@@ -29,7 +36,10 @@ function floatTo16BitPCM(float32Array) {
 
     sample = Math.max(-1, Math.min(1, sample));
 
-    const value = sample < 0 ? sample * 0x8000 : sample * 0x7fff;
+    const value =
+      sample < 0
+        ? sample * 0x8000
+        : sample * 0x7fff;
 
     view.setInt16(i * 2, value, true);
   }
@@ -54,7 +64,9 @@ function resampleTo16k(input, inputSampleRate) {
     const right = Math.min(left + 1, input.length - 1);
     const fraction = position - left;
 
-    output[i] = input[left] * (1 - fraction) + input[right] * fraction;
+    output[i] =
+      input[left] * (1 - fraction) +
+      input[right] * fraction;
   }
 
   return output;
@@ -73,10 +85,20 @@ function base64ToArrayBuffer(base64) {
 
 function pcm16ToFloat32(arrayBuffer) {
   const view = new DataView(arrayBuffer);
+<<<<<<< HEAD
   const samples = new Float32Array(arrayBuffer.byteLength / 2);
 
   for (let i = 0; i < samples.length; i++) {
     samples[i] = view.getInt16(i * 2, true) / 32768;
+=======
+  const samples = new Float32Array(
+    arrayBuffer.byteLength / 2
+  );
+
+  for (let i = 0; i < samples.length; i++) {
+    samples[i] =
+      view.getInt16(i * 2, true) / 32768;
+>>>>>>> d02005fef7c6ddd28bb697305f343246c14921f6
   }
 
   return samples;
@@ -112,6 +134,7 @@ function App() {
     ]);
   };
 
+<<<<<<< HEAD
   const handleSend = async (text) => {
     if (!text?.trim()) {
       return;
@@ -145,6 +168,8 @@ function App() {
     }
   };
 
+=======
+>>>>>>> d02005fef7c6ddd28bb697305f343246c14921f6
   const stopOutputAudio = () => {
     audioSourcesRef.current.forEach((source) => {
       try {
@@ -161,91 +186,149 @@ function App() {
 
     try {
       if (!outputAudioContextRef.current) {
-        outputAudioContextRef.current = new AudioContext({
-          sampleRate: 24000,
-        });
+        outputAudioContextRef.current =
+          new AudioContext({
+            sampleRate: 24000,
+          });
       }
 
-      const audioContext = outputAudioContextRef.current;
+      const audioContext =
+        outputAudioContextRef.current;
 
       if (audioContext.state === "suspended") {
         await audioContext.resume();
       }
 
-      const arrayBuffer = base64ToArrayBuffer(base64Audio);
+      const arrayBuffer =
+        base64ToArrayBuffer(base64Audio);
 
-      const float32Audio = pcm16ToFloat32(arrayBuffer);
+      const float32Audio =
+        pcm16ToFloat32(arrayBuffer);
 
       if (!float32Audio.length) return;
 
-      const audioBuffer = audioContext.createBuffer(
-        1,
-        float32Audio.length,
-        24000,
+      const audioBuffer =
+        audioContext.createBuffer(
+          1,
+          float32Audio.length,
+          24000
+        );
+
+      audioBuffer.copyToChannel(
+        float32Audio,
+        0
       );
 
-      audioBuffer.copyToChannel(float32Audio, 0);
-
-      const source = audioContext.createBufferSource();
+      const source =
+        audioContext.createBufferSource();
 
       source.buffer = audioBuffer;
+<<<<<<< HEAD
       source.connect(audioContext.destination);
+=======
+      source.connect(
+        audioContext.destination
+      );
 
-      const currentTime = audioContext.currentTime;
+      const currentTime =
+        audioContext.currentTime;
+>>>>>>> d02005fef7c6ddd28bb697305f343246c14921f6
 
-      if (nextAudioTimeRef.current < currentTime) {
-        nextAudioTimeRef.current = currentTime;
+      if (
+        nextAudioTimeRef.current <
+        currentTime
+      ) {
+        nextAudioTimeRef.current =
+          currentTime;
       }
 
-      const startTime = nextAudioTimeRef.current;
+      const startTime =
+        nextAudioTimeRef.current;
 
       source.start(startTime);
 
-      nextAudioTimeRef.current = startTime + audioBuffer.duration;
+      nextAudioTimeRef.current =
+        startTime + audioBuffer.duration;
 
       audioSourcesRef.current.push(source);
 
       source.onended = () => {
-        audioSourcesRef.current = audioSourcesRef.current.filter(
-          (item) => item !== source,
-        );
+        audioSourcesRef.current =
+          audioSourcesRef.current.filter(
+            (item) => item !== source
+          );
 
-        if (audioSourcesRef.current.length === 0 && isRunningRef.current) {
+        if (
+          audioSourcesRef.current.length === 0 &&
+          isRunningRef.current
+        ) {
           setStatus("listening");
         }
       };
     } catch (audioError) {
-      console.error("Audio playback error:", audioError);
+      console.error(
+        "Audio playback error:",
+        audioError
+      );
     }
   };
 
   const handleGeminiMessage = (message) => {
+<<<<<<< HEAD
     const serverContent = message?.serverContent;
 
     if (!serverContent) return;
 
     const inputTranscription = serverContent.inputTranscription;
+=======
+    const serverContent =
+      message?.serverContent;
+
+    if (!serverContent) return;
+
+    const inputTranscription =
+      serverContent.inputTranscription;
+>>>>>>> d02005fef7c6ddd28bb697305f343246c14921f6
 
     if (inputTranscription?.text) {
-      addMessage("user", inputTranscription.text);
+      addMessage(
+        "user",
+        inputTranscription.text
+      );
     }
 
+<<<<<<< HEAD
     const outputTranscription = serverContent.outputTranscription;
+=======
+    const outputTranscription =
+      serverContent.outputTranscription;
+>>>>>>> d02005fef7c6ddd28bb697305f343246c14921f6
 
     if (outputTranscription?.text) {
-      addMessage("ai", outputTranscription.text);
+      addMessage(
+        "ai",
+        outputTranscription.text
+      );
     }
 
+<<<<<<< HEAD
     const modelTurn = serverContent.modelTurn;
+=======
+    const modelTurn =
+      serverContent.modelTurn;
+>>>>>>> d02005fef7c6ddd28bb697305f343246c14921f6
 
     if (modelTurn?.parts) {
       setStatus("speaking");
 
       modelTurn.parts.forEach((part) => {
-        const inlineData = part?.inlineData;
+        const inlineData =
+          part?.inlineData;
 
         if (inlineData?.data) {
-          playGeminiAudio(inlineData.data);
+          playGeminiAudio(
+            inlineData.data
+          );
         }
       });
     }
@@ -259,21 +342,26 @@ function App() {
     }
 
     if (serverContent.turnComplete) {
-      if (audioSourcesRef.current.length === 0) {
+      if (
+        audioSourcesRef.current.length === 0
+      ) {
         setStatus("listening");
       }
     }
   };
 
   const startMicrophone = async () => {
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    const AudioContextClass =
+      window.AudioContext ||
+      window.webkitAudioContext;
 
     if (!AudioContextClass) {
       throw new Error(
-        "আপনার browser AudioContext support করে না। Chrome বা Edge ব্যবহার করুন।",
+        "আপনার browser AudioContext support করে না। Chrome বা Edge ব্যবহার করুন।"
       );
     }
 
+<<<<<<< HEAD
     const stream = await navigator.mediaDevices.getUserMedia({
       audio: {
         channelCount: 1,
@@ -283,57 +371,104 @@ function App() {
       },
       video: false,
     });
+=======
+    const stream =
+      await navigator.mediaDevices.getUserMedia({
+        audio: {
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+        video: false,
+      });
+>>>>>>> d02005fef7c6ddd28bb697305f343246c14921f6
 
     streamRef.current = stream;
 
-    const audioContext = new AudioContextClass();
+    const audioContext =
+      new AudioContextClass();
 
-    audioContextRef.current = audioContext;
+    audioContextRef.current =
+      audioContext;
 
     if (audioContext.state === "suspended") {
       await audioContext.resume();
     }
 
-    const source = audioContext.createMediaStreamSource(stream);
+    const source =
+      audioContext.createMediaStreamSource(
+        stream
+      );
 
     sourceRef.current = source;
 
-    const processor = audioContext.createScriptProcessor(4096, 1, 1);
+    const processor =
+      audioContext.createScriptProcessor(
+        4096,
+        1,
+        1
+      );
 
     processorRef.current = processor;
 
-    const silentGain = audioContext.createGain();
+    const silentGain =
+      audioContext.createGain();
 
     silentGain.gain.value = 0;
 
     processor.onaudioprocess = (event) => {
-      if (!isRunningRef.current || !sessionRef.current) {
+      if (
+        !isRunningRef.current ||
+        !sessionRef.current
+      ) {
         return;
       }
 
-      const inputData = event.inputBuffer.getChannelData(0);
+      const inputData =
+        event.inputBuffer.getChannelData(0);
 
-      const resampled = resampleTo16k(inputData, audioContext.sampleRate);
+      const resampled =
+        resampleTo16k(
+          inputData,
+          audioContext.sampleRate
+        );
 
-      const pcm = floatTo16BitPCM(resampled);
+      const pcm =
+        floatTo16BitPCM(resampled);
 
-      const base64Audio = arrayBufferToBase64(pcm);
+      const base64Audio =
+        arrayBufferToBase64(pcm);
 
       try {
         sessionRef.current.sendRealtimeInput({
           audio: {
             data: base64Audio,
+<<<<<<< HEAD
             mimeType: "audio/pcm;rate=16000",
+=======
+            mimeType:
+              "audio/pcm;rate=16000",
+>>>>>>> d02005fef7c6ddd28bb697305f343246c14921f6
           },
         });
       } catch (sendError) {
-        console.error("Audio send error:", sendError);
+        console.error(
+          "Audio send error:",
+          sendError
+        );
       }
     };
 
     source.connect(processor);
     processor.connect(silentGain);
+<<<<<<< HEAD
     silentGain.connect(audioContext.destination);
+=======
+    silentGain.connect(
+      audioContext.destination
+    );
+>>>>>>> d02005fef7c6ddd28bb697305f343246c14921f6
   };
 
   const startLive = async () => {
@@ -341,28 +476,40 @@ function App() {
     setStatus("thinking");
 
     try {
-      const session = await connectLive({
-        onOpen: () => {
-          console.log("Live session opened.");
-        },
+      const session =
+        await connectLive({
+          onOpen: () => {
+            console.log(
+              "Live session opened."
+            );
+          },
 
-        onMessage: handleGeminiMessage,
+          onMessage:
+            handleGeminiMessage,
 
-        onError: (liveError) => {
-          console.error("Gemini Live error:", liveError);
+          onError: (liveError) => {
+            console.error(
+              "Gemini Live error:",
+              liveError
+            );
 
-          setError(liveError?.message || "Gemini Live connection error হয়েছে।");
+            setError(
+              liveError?.message ||
+                "Gemini Live connection error হয়েছে।"
+            );
 
-          setStatus("error");
-        },
+            setStatus("error");
+          },
 
-        onClose: (event) => {
-          console.log("Gemini Live closed:", event);
-        },
-      });
+          onClose: (event) => {
+            console.log(
+              "Gemini Live closed:",
+              event
+            );
+          },
+        });
 
       sessionRef.current = session;
-
       isRunningRef.current = true;
 
       await startMicrophone();
@@ -370,19 +517,36 @@ function App() {
       setIsListening(true);
       setStatus("listening");
     } catch (startError) {
-      console.error("Start error:", startError);
+      console.error(
+        "Start error:",
+        startError
+      );
 
       await stopLive(false);
 
-      let message = startError?.message || "Voice AI চালু করা যায়নি।";
+      let message =
+        startError?.message ||
+        "Voice AI চালু করা যায়নি।";
 
-      if (startError?.name === "NotAllowedError") {
+      if (
+        startError?.name ===
+        "NotAllowedError"
+      ) {
         message =
           "Microphone permission দেওয়া হয়নি। Browser settings থেকে Microphone Allow করুন।";
       }
 
+<<<<<<< HEAD
       if (startError?.name === "NotFoundError") {
         message = "কোনো microphone পাওয়া যায়নি।";
+=======
+      if (
+        startError?.name ===
+        "NotFoundError"
+      ) {
+        message =
+          "কোনো microphone পাওয়া যায়নি।";
+>>>>>>> d02005fef7c6ddd28bb697305f343246c14921f6
       }
 
       setError(message);
@@ -391,11 +555,18 @@ function App() {
     }
   };
 
+<<<<<<< HEAD
   const stopLive = async (updateState = true) => {
+=======
+  const stopLive = async (
+    updateState = true
+  ) => {
+>>>>>>> d02005fef7c6ddd28bb697305f343246c14921f6
     isRunningRef.current = false;
 
     if (processorRef.current) {
-      processorRef.current.onaudioprocess = null;
+      processorRef.current.onaudioprocess =
+        null;
 
       try {
         processorRef.current.disconnect();
@@ -413,9 +584,11 @@ function App() {
     }
 
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => {
-        track.stop();
-      });
+      streamRef.current
+        .getTracks()
+        .forEach((track) => {
+          track.stop();
+        });
 
       streamRef.current = null;
     }
@@ -442,7 +615,14 @@ function App() {
       try {
         sessionRef.current.close();
       } catch (sessionError) {
+<<<<<<< HEAD
         console.error("Session close error:", sessionError);
+=======
+        console.error(
+          "Session close error:",
+          sessionError
+        );
+>>>>>>> d02005fef7c6ddd28bb697305f343246c14921f6
       }
 
       sessionRef.current = null;
@@ -476,7 +656,8 @@ function App() {
       isRunningRef.current = false;
 
       if (processorRef.current) {
-        processorRef.current.onaudioprocess = null;
+        processorRef.current.onaudioprocess =
+          null;
 
         try {
           processorRef.current.disconnect();
@@ -490,9 +671,23 @@ function App() {
       }
 
       if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => {
-          track.stop();
-        });
+        streamRef.current
+          .getTracks()
+          .forEach((track) => {
+            track.stop();
+          });
+      }
+
+      if (audioContextRef.current) {
+        audioContextRef.current
+          .close()
+          .catch(() => {});
+      }
+
+      if (outputAudioContextRef.current) {
+        outputAudioContextRef.current
+          .close()
+          .catch(() => {});
       }
 
       if (audioContextRef.current) {
@@ -531,8 +726,14 @@ function App() {
             className="rounded-xl bg-white/10 px-3 py-2 text-xs transition hover:bg-white/20 sm:text-sm"
           >
             🗑️
-            <span className="hidden sm:inline"> Clear Chat</span>
-            <span className="sm:hidden"> Clear</span>
+            <span className="hidden sm:inline">
+              {" "}
+              Clear Chat
+            </span>
+            <span className="sm:hidden">
+              {" "}
+              Clear
+            </span>
           </button>
         </div>
       </header>
@@ -544,7 +745,10 @@ function App() {
 
             <Status status={status} />
 
-            <VoiceButton isListening={isListening} onClick={handleVoice} />
+            <VoiceButton
+              isListening={isListening}
+              onClick={handleVoice}
+            />
 
             <p className="mt-3 px-2 text-center text-xs text-gray-500 sm:text-sm">
               {isListening
@@ -564,7 +768,11 @@ function App() {
 
           <section className="h-full min-h-0 overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-3 shadow-2xl backdrop-blur-xl sm:p-5 lg:p-6">
             <div className="h-full min-h-0 overflow-y-auto">
+<<<<<<< HEAD
               <Chat messages={messages} onSend={handleSend} />
+=======
+              <Chat messages={messages} />
+>>>>>>> d02005fef7c6ddd28bb697305f343246c14921f6
             </div>
           </section>
         </div>
