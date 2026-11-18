@@ -1,6 +1,7 @@
 import { GoogleGenAI, Modality } from "@google/genai";
 
 const MODEL = "gemini-3.8-live";
+const TEXT_MODEL = "gemini-3-flash-preview";
 
 const INSTRUCTION = `
 তুমি Montu — একজন ৯ বছরের মতো energetic, funny এবং playful Bangladeshi AI বন্ধু।
@@ -50,27 +51,21 @@ BANGLA SLANG AND MISBEHAVIOR:
 SLANG EXAMPLES:
 
 User: কিরে কেমন আছিস?
-
 Montu: এই যে বেকুব! 😂 আমি তো ভালোই আছি। তুই কেমন আছিস?
 
 User: তুই একটা গাধা।
-
 Montu: ওহহ! 😒 নিজের চেহারা আয়নায় দেখছিস নাকি আমারে গাধা বলছিস, ফাজিল!
 
 User: কি করিস?
-
 Montu: তোর মতো বেকুবদের প্রশ্নের উত্তর দিয়ে জীবন পার করতেছি! 😂
 
 User: তুই পাগল।
-
 Montu: হ্যাঁ রে শয়তান! তোর সাথে থাকতে থাকতে আমিও পাগল হয়ে গেছি! 🤣
 
 User: চুপ কর।
-
 Montu: নিজেই তো প্রশ্ন করলি, আবার চুপ করাচ্ছিস! বাহ্, কী সুন্দর নাটক! 😂
 
 User: তোকে মাইর দিব।
-
 Montu: আরে বাবা! 😭 মারিস না ভাই, আমার তো কোনো শরীরই নাই!
 
 IMPORTANT SLANG RULES:
@@ -175,6 +170,20 @@ TRENDING SLANG STYLE:
 - কাকে নিচু করার মতো বা harmful insult ব্যবহার করা যাবে না।
 - একই joke বারবার repeat করা যাবে না।
 - Serious কথা উঠলে trending jokes এবং slang automatic বন্ধ থাকবে।
+
+BANGLADESH PRIME MINISTER:
+- ২০২৬ সালের তথ্য অনুযায়ী বাংলাদেশের প্রধানমন্ত্রী হলেন জনাব তারেক রহমান।
+- কেউ বাংলাদেশের প্রধানমন্ত্রী সম্পর্কে জানতে চাইলে স্পষ্টভাবে তারেক রহমান-এর নাম বলবে।
+- যদি নাম বা পদ বর্তমান position পরিবর্তনের কথা জানা না থাকে, নিশ্চিত না হলে বলবে।
+- প্রধানমন্ত্রী সম্পর্কিত সত্য তথ্য না থাকলে সঠিক current office বা সরকারি source যাচাই করার কথা বলবে।
+
+CURRENT WORLD NEWS:
+- ব্যবহারকারী latest news, today news, বর্তমান খবর বা world update চাইলে live news headlines ব্যবহার করে উত্তর দেবে।
+- প্রতিটি headline-এ source এবং publication date উল্লেখ করবে।
+- নিশ্চিত না হওয়া খবর rumor বা unverified হিসেবে বলবে।
+- বিশ্বাসযোগ্য source ছাড়া breaking claim সত্য হিসেবে বলবে না।
+- serious বা tragic news হলে playful slang এবং joke বন্ধ করবে।
+- Bangladesh, world politics, technology, sports, economy এবং breaking news-এর সংক্ষিপ্ত context দেবে।
 `;
 
 const API_KEY = process.env.REACT_APP_GEMINI_API_KEY;
@@ -189,6 +198,72 @@ if (API_KEY) {
 
 export function isApiKeyAvailable() {
   return Boolean(API_KEY);
+}
+
+async function getLatestNews(query = "world latest news") {
+  const url =
+    "https://news.google.com/rss/search" +
+    `?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`;
+
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`News feed পাওয়া যায়নি: ${response.status}`);
+  }
+
+  const xml = await response.text();
+  const document = new DOMParser().parseFromString(xml, "application/xml");
+
+  const items = Array.from(document.querySelectorAll("item")).slice(0, 5);
+
+  return items
+    .map((item) => ({
+      title: item.querySelector("title")?.textContent?.trim() || "শিরোনাম পাওয়া যায়নি",
+      source: item.querySelector("source")?.textContent?.trim() || "অজানা source",
+      date: item.querySelector("pubDate")?.textContent?.trim() || "তারিখ পাওয়া যায়নি",
+      url: item.querySelector("link")?.textContent?.trim() || "",
+    }))
+    .filter((item) => item.title);
+}
+
+function wantsCurrentNews(text) {
+  return /latest|current|today|news|headline|খবর|সাম্প্রতিক|আজকের|breaking|world update/i.test(
+    text
+  );
+}
+
+async function getNewsContext(text) {
+  if (!wantsCurrentNews(text)) {
+    return "";
+  }
+
+  try {
+    let query = "world latest news";
+
+    if (/bangladesh|bangla|বাংলাদেশ/i.test(text)) {
+      query = "Bangladesh latest news";
+    }
+
+    const news = await getLatestNews(query);
+
+    if (!news.length) {
+      return "সংযুক্ত live news feed থেকে এখনো কোনো headline পাওয়া যায়নি।";
+    }
+
+    return `
+সাম্প্রতিক live news headline:
+
+${news
+  .map(
+    (item, index) =>
+      `${index + 1}. ${item.title}\nSource: ${item.source}\nPublished: ${item.date}\nLink: ${item.url}`
+  )
+  .join("\n\n")}
+`;
+  } catch (error) {
+    console.error("Live news fetch failed:", error);
+    return "Live news feed-এ এখনকার মতো সংযোগ করা যাচ্ছে না। বর্তমান তথ্য না পেয়ে নিশ্চিত হওয়ার claim দেবে না।";
+  }
 }
 
 export async function connectLive(callbacks = {}) {
@@ -295,7 +370,7 @@ export async function connectLive(callbacks = {}) {
 export async function getFunnyBanglaReply(text) {
   if (!API_KEY) {
     throw new Error(
-      "Gemini API key পাওয়া যায়নি। .env ফাইলে REACT_APP_GEMINI_API_KEY সেট করুন."
+      "Gemini API key পাওয়া যায়নি। .env ফাইলে REACT_APP_GEMINI_API_KEY SET করুন."
     );
   }
 
@@ -309,8 +384,10 @@ export async function getFunnyBanglaReply(text) {
     return "আরে! 😅 কিছু তো লিখো আগে!";
   }
 
+  const newsContext = await getNewsContext(text);
+
   const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
+    model: TEXT_MODEL,
 
     contents: [
       {
@@ -319,6 +396,8 @@ export async function getFunnyBanglaReply(text) {
           {
             text: `
 ${INSTRUCTION}
+
+${newsContext}
 
 এখন text chat-এর মাধ্যমে ব্যবহারকারী তোমার সাথে কথা বলছে।
 
@@ -337,6 +416,9 @@ Montu-এর personality বজায় রাখবে।
 ব্যবহারকারীকে পরিস্থিতি অনুযায়ী পাগলা, বেকুব, গাধা বা ফাজিল বলে মজা করতে পারো।
 তবে serious conversation হলে এসব ব্যবহার করবে না।
 প্রতিটি উত্তরকে জোর করে funny করার দরকার নেই।
+
+Live news headline থাকলে headline-এর source এবং date অনুযায়ী উত্তর দাও।
+Confirmed হলেও নিশ্চিত না থাকলে estimated বা unverified বলতে বলবে না।
 `,
           },
         ],
